@@ -54,6 +54,46 @@ function +vi-git-username() {
     hook_com[misc]+=" ($username)"
 }
 
+function _get-pr-prompt() {
+    source ~/code/prChecka/pr.properties
+    local pr_prompt=""
+    local reviews="false"
+    if [[ ! -z "${jenkins_dsl_jobs_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt=":%F{green}${jenkins_dsl_jobs_pr_count}%B%F{white}🏗 "
+    fi
+
+    if [[ ! -z "${jenkins_docker_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt="${pr_prompt}:%F{green}${jenkins_docker_pr_count}%B%F{white}🐳"
+    fi
+
+    if [[ ! -z "${jenkins_libraries_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt="${pr_prompt}:%F{green}${jenkins_libraries_pr_count}%B%F{white}📚"
+    fi
+
+    if [[ ! -z "${ci_scripts_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt="${pr_prompt}:%F{green}${ci_scripts_pr_count}%B%F{white}📜"
+    fi
+
+    if [[ ! -z "${jc_cli_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt="${pr_prompt}:%F{green}${jc_cli_pr_count}%B%F{white}📦"
+    fi
+
+    if [[ ! -z "${jenkins_cloud_pr_count}" ]]; then
+        reviews="true"
+        pr_prompt="${pr_prompt}:%F{green}${jenkins_cloud_pr_count}%B%F{white}⛅"
+    fi
+
+    if [[ $reviews == "true" ]]; then
+        pr_prompt="{👀${pr_prompt}} "
+        echo -n "%B%F{white}${pr_prompt}%F{default}"
+    fi
+}
+
 function _get-docker-prompt() {
     local docker_all=$(docker ps -a --format "{{.Status}}")
     local up_containers=$(echo $docker_all | grep up -i | wc -l | xargs)👌
@@ -71,7 +111,7 @@ function setprompt() {
     # Current dir; show in yellow if not writable
     [[ -w $PWD ]] && infoline+=( "%F{green}" ) || infoline+=( "%F{yellow}" )
     infoline+=( "%F{blue}%W|%@ %B%F{white}[%b${PWD/#$HOME/~}%B%F{white}]%b%F{default} " )
-
+    infoline+=( "$(_get-pr-prompt)" )
     if [[ $ENABLE_DOCKER_PROMPT == 'true' ]]; then
         infoline+=( "$(_get-docker-prompt)" )
     fi
